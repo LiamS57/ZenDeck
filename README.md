@@ -23,7 +23,7 @@ All of the required PCB's are in the PCB Files folder as both a zipped Gerber fi
 
 I have made the BMS its own seperate project since it is quite complex but you will need one to complete this build. Here's a link its Github page! https://github.com/dmcke5/MiniPC_BMS
 
-# Bill of materials
+## Bill of materials
 
 1x Switch lite button set - https://www.aliexpress.com/item/1005007266706005.html
 
