@@ -16,7 +16,7 @@ This is the second revision of my Mini PC based handheld Gaming PC! It is design
 - USB-C Charging, power path management and OS integration over USB for battery capacity reporting
 - Customisable RGB joystick surrounds
 
-#### Info:
+## Info:
 I have included every custom part as both a STEP and STL file in the 3D files folder along with the complete assembly as a .STEP file to aid with assembly.
 
 All of the required PCB's are in the PCB Files folder as both a zipped Gerber file for direct upload to your manufacturer of choice, along with the KiCad project files which you can use to check locations/orientations of components and produce a BOM. 
@@ -40,4 +40,8 @@ I have made the BMS its own seperate project since it is quite complex but you w
 2x Xbox One Joystick Caps - https://www.aliexpress.com/item/1005007508376169.html
 
 6x M2x10mm Hex Standoffs - https://www.aliexpress.com/item/1005002952338852.html
+
+1x 4s BMS - https://www.aliexpress.com/item/1005006005953077.html
+
+1x Waveshare 8" Display - https://www.aliexpress.com/item/1005005203204148.html
 
