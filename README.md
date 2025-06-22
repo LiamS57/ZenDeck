@@ -55,3 +55,7 @@ I have made the BMS its own seperate project since it is quite complex but you w
 
 1x Waveshare 8" Display - https://www.aliexpress.com/item/1005005203204148.html
 
+2x Speakers - Model number: CDS-20144
+
+1x Trackpad - Nodem number: TPS43-201A-S
+
