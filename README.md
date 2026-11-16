@@ -1,61 +1,55 @@
 # ZenDeck
-A Mini PC based handheld games console!
- 
- ![Alt text](ZenDeck_Image.png "ZenDeck")
 
-This is the second revision of my Mini PC based handheld Gaming PC! It is designed for a Beelink SER 5 Mini PC but could be adapted to other systems by changing the mounting brackets and outlet plate.
+<h3 align="center">
+This is a hard-fork of CNCDan's fantastic ZenDeck project, which incorporates a Ryzen-powered Mini-PC into a custom-built handheld gaming console!
+</h3>
 
-#### Features:
-- Full sized hall effect joysticks
-- Full sized rumble motors
-- Xinput compatible controller
-- Hall effect triggers
+## Acknowledgement
+
+The majority of this work is based on the previous work of CNCDan (see the upstream repo!). As such, my adjustments would not have been possible without many months of development on his end. If you find that this work benefits you or inspires you to make your own ZenDeck, please take a look at his original project -- as well as his other works -- and show him your support!
+
+**CNCDan's Youtube:**
+https://www.youtube.com/@cncdan
+
+**CNCDan's Original ZenDeck Development Log:**
+https://www.youtube.com/watch?v=_ST59qbFj8Q&list=PLy9j9_dmmg2TrMOIG65j3nOELqgDXPkkn
+
+ ![Alt text](ZenDeck_Image.png "Original ZenDeck")
+
+## Info
+
+This repository intends to serve as a build diary and general knowledge-base for my specific implementation of the ZenDeck, in the hopes that the details of my attempt are helpful to others interested in constructing one.
+I had started my implementation a few months before forking the repository, so some details are not part of the commit history; however, **there is still quite a bit to finish**, and future changes/updates will be recorded here.
+
+Please note that this is not a one-to-one recreation -- I have made several design changes to better suit my use-case. The major points are provided in this readme, but smaller changes are described in more detail in each directory.
+
+## Features
+
+- Customizable mounting system for other Mini-PCs
+- 8" 1280x800 60hz IPS display (with touch)
+- Full-sized Hall effect Joysticks
+- Hall effect Triggers
+- Full-sized rumble motors *[IN PROGRESS]*
+- IMU/Gyroscopic aim-assist *[IN PROGRESS]*
+- Custom USB HID-based controller using LUFA
 - Trackpad
-- 8" 1280x800 60hz IPS display
 - Room for up to 88.8Wh battery capacity (using 6000mah 21700 cells).
 - USB-C Charging, power path management and OS integration over USB for battery capacity reporting
-- Customisable RGB joystick surrounds
 
-## Info:
-I have included every custom part as both a STEP and STL file in the 3D files folder along with the complete assembly as a .STEP file to aid with assembly.
+## Major Design Changes
 
-All of the required PCB's are in the PCB Files folder as both a zipped Gerber file for direct upload to your manufacturer of choice, along with the KiCad project files which you can use to check locations/orientations of components and produce a BOM.
+The following is a (non-exhaustive) list of high-level design changes I've made from the original design. For more information on smaller details changed, please see the individual section readmes and the commit log.
+- Mini-PC: Beelink SER5 Max L (Ryzen 7 6800H, 32GB RAM)
+- 2-microcontroller control design instead of 3
+  <!-- - To conserve on cost and complexity, I have opted to remove the RHS microcontroller in favor of completely running the controller inputs off of a single Atmega32u4. This also allows me to fit all PCB uC USB connections on a single HS8836A for on-the-go reprogramability. -->
+- Pure AVR C instead of Arduino.h
+- Higher power BMS (19V, 5A) *[IN PROGRESS]*
+- Replacement of the TRRS port with an I2C bus header
 
-Please note, you will need to use ENIG finish on the left and right controller PCB's to get the membrane buttons to work properly!
+## Progress
+*[COMING SOON]*
 
-I have made the BMS its own seperate project since it is quite complex but you will need one to complete this build. Here's a link its Github page! https://github.com/dmcke5/MiniPC_BMS
+## License
 
-## Bill of materials
-
-1x Switch lite button set - https://www.aliexpress.com/item/1005007266706005.html
-
-1x Switch lite membrane set - https://www.aliexpress.com/item/1005004544710872.html
-
-2x PS5 Hall sensor joysticks - https://www.aliexpress.com/item/1005007688806322.html
-
-1x Xbox rumble motor (pair) - https://www.aliexpress.com/item/1005002877455453.html
-
-2x PS4/5 Trigger Springs - https://www.aliexpress.com/item/1005005844578554.html
-
-2x 3x1mm Neodymium Magnets - https://www.aliexpress.com/item/1005006619263188.html
-
-2x Xbox One Joystick Caps - https://www.aliexpress.com/item/1005007508376169.html
-
-6x M2x10mm Hex Standoffs - https://www.aliexpress.com/item/1005002952338852.html
-
-8x M3x5x5 Threaded Inserts
-
-20x M2x3.2x4 Threaded Inserts
-
-4x M2x3.2x3 Threaded Inserts
-
-4x M2.5x4x3.5 Threaded Inserts
-
-1x 4s BMS - https://www.aliexpress.com/item/1005006005953077.html
-
-1x Waveshare 8" Display - https://www.aliexpress.com/item/1005005203204148.html
-
-2x Speakers - Model number: CDS-20144
-
-1x Trackpad - Nodem number: TPS43-201A-S
-
+This project is licensed under the **CERN Open Hardware Licence Version 2 – Strongly Reciprocal** (CERN-OHL-S-2.0), similar to and as directed by the upstream repository.
+A copy of the full license is available in the [license](Licence) file.
