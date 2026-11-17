@@ -14,7 +14,7 @@ https://www.youtube.com/@cncdan
 **CNCDan's Original ZenDeck Development Log:**
 https://www.youtube.com/watch?v=_ST59qbFj8Q&list=PLy9j9_dmmg2TrMOIG65j3nOELqgDXPkkn
 
- ![Alt text](ZenDeck_Image.png "Original ZenDeck")
+ ![Alt text](images/ZenDeck_Original.png "Original ZenDeck")
 
 ## Info
 
