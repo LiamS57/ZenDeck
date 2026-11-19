@@ -168,10 +168,12 @@ bool CALLBACK_HID_Device_CreateHIDReport(
     read_adc();
     update_joystick_centers();
     update_analog_limits();
-    GamepadReport->JOY_LX = map_joystick_axis(adc_state[0], &joy_lx);
-    GamepadReport->JOY_LY = -map_joystick_axis(adc_state[1], &joy_ly);
-    GamepadReport->JOY_RX = map_joystick_axis(adc_state[2], &joy_rx);
-    GamepadReport->JOY_RY = -map_joystick_axis(adc_state[3], &joy_ry);
+    
+    map_joystick_axes(adc_state[0], adc_state[1], &joy_lx, &joy_ly, &GamepadReport->JOY_LX, &GamepadReport->JOY_LY);
+    GamepadReport->JOY_LY = -GamepadReport->JOY_LY;
+    map_joystick_axes(adc_state[2], adc_state[3], &joy_rx, &joy_ry, &GamepadReport->JOY_RX, &GamepadReport->JOY_RY);
+    GamepadReport->JOY_RY = -GamepadReport->JOY_RY;
+
     GamepadReport->TRIG_L = 32767L - map_trigger_axis(adc_state[4], trig_l_u, trig_l_l);
     GamepadReport->TRIG_R = map_trigger_axis(adc_state[5], trig_r_u, trig_r_l);
 

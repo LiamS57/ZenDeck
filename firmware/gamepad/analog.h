@@ -6,13 +6,13 @@
 
 #define ADC_SAMPLE_SIZE 5
 
-#define DZ_JOY_OUTER 57  // 90% of 64
-#define DZ_JOY_INNER 10  // 15% of 64
+#define DZ_JOY_OUTER 921  // 90% of 1024
+#define DZ_JOY_INNER 154  // 15% of 1024
 #define DZ_TRIG_OUTER 44  // 70% of 64
 #define DZ_TRIG_INNER 14  // 20% of 64
 
 #define CENTER_ALPHA 3  // out of 256
-#define CENTER_CHECK_RADIUS_SQ 625L  // 25^2
+#define CENTER_CHECK_RADIUS_SQ 625  // 25^2
 
 
 typedef struct {
@@ -43,7 +43,7 @@ extern void init_joysticks(void);
 extern void read_adc(void);
 extern void update_analog_limits(void);
 extern void update_joystick_centers(void);
-extern int16_t map_joystick_axis(uint16_t adc, Joystick_Axis_Config* conf);
+extern void map_joystick_axes(uint16_t x_adc, uint16_t y_adc, Joystick_Axis_Config* x_conf, Joystick_Axis_Config* y_conf, int16_t* x_out, int16_t* y_out);
 extern uint16_t map_trigger_axis(uint16_t adc, uint16_t upper, uint16_t lower);
 
 

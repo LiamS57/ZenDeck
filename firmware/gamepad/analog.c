@@ -19,6 +19,9 @@ uint16_t trig_r_l;
 
 /* --- Helper Functions --- */
 
+/**
+ * Reads value from a given ADC channel using registers.
+ */
 uint16_t read_adc_channel(uint8_t chan) {
     ADMUX = (ADMUX & 0xE0) | (chan & 0x07);
     ADCSRA |= _BV(ADSC);
@@ -27,31 +30,48 @@ uint16_t read_adc_channel(uint8_t chan) {
 }
 
 /**
- * Fast(?) inverse linear interpolation between deadzones of 
- * the axis, incorporating changing deadzones.
+ * Fast-ish integer square root. Does not fit the entire 24-bit
+ * range, but we don't need that anyway.
  */
-uint16_t fast_axis_ilerp(
-    uint16_t lim_lower,  //  10-bit
-    uint16_t lim_upper,  // 10-bit
-    uint16_t dz_lower,  // technically 7-bit because 0 - 64
-    uint16_t dz_upper,  //   ^ ^ ^
-    uint16_t adc  // 10-bit
+uint16_t isqrt(uint24_t x) {
+    uint24_t res = 0;
+    uint24_t bit = 0x400000;
+
+    while (bit > x) bit >>= 2;
+    while (bit > 0) {
+        if (x >= (res + bit)) {
+            x -= res + bit;
+            res = (res >> 1) + bit;
+        } else {
+            res >>= 1;
+        }
+        bit >>= 2;
+    }
+
+    return (uint16_t)res;
+}
+
+/**
+ * Remaps an ADC value to an int16_t based on the limits and 
+ * center provided in an axis configuration struct.
+ * Output: -1024 to 1024
+ */
+int16_t remap_axis(
+    uint16_t adc,
+    Joystick_Axis_Config* conf
 ) {
-    // uint32_t range = (uint32_t)lim_upper - lim_lower;
-    // uint32_t n1 = ((uint32_t)(adc - lim_lower) << 8) - (range * dz_lower);
-    // uint32_t n2 = range * (dz_upper - dz_lower);
-    // return (uint16_t)(((n1 >> 1) * 32767L) / (n2 >> 1));
-
-    // uint16_t adc_clamped = adc > lim_upper ? lim_upper : (adc < lim_lower ? lim_lower : adc);
-    // uint32_t scaled = (uint32_t)(adc_clamped - lim_lower) * 32767L;
-    // return (uint16_t)(scaled / (lim_upper - lim_lower));
-
-    uint16_t range = lim_upper - lim_lower;
-    uint16_t dz_u_real = ((range * dz_upper) >> 6) + lim_lower;
-    uint16_t dz_l_real = ((range * dz_lower) >> 6) + lim_lower;
-    uint16_t adc_clamped = adc > dz_u_real ? dz_u_real : (adc < dz_l_real ? dz_l_real : adc);
-    uint32_t scaled = (uint32_t)(adc_clamped - dz_l_real) * 32767L;
-    return (uint16_t)(scaled / (dz_u_real - dz_l_real));
+    uint16_t adc_clamped;
+    uint24_t scaled;
+    if (adc > conf->center) {
+        adc_clamped = adc > conf->upper ? conf->upper : adc;
+        scaled = (uint24_t)(adc_clamped - conf->center) << 10;
+        return (int16_t)(scaled / (conf->upper - conf->center));
+    } else if (adc < conf->center) {
+        adc_clamped = adc < conf->lower ? conf->lower : adc;
+        scaled = (uint24_t)(adc_clamped - conf->lower) << 10;
+        return (int16_t)(scaled / (conf->center - conf->lower)) - 1024;
+    }
+    return 0;
 }
 
 /** Exponential smoothing step for a single axis center */
@@ -169,28 +189,29 @@ void update_joystick_centers(void) {
 
 /** 
  * Obtain joystick mapping using current center and limits, 
- * while applying deadzones. Output: -32767 to 32767
+ * while applying deadzones. Output: -32767 to 32767 (per axis)
  */
-int16_t map_joystick_axis(
-    uint16_t adc,
-    Joystick_Axis_Config* conf
+void map_joystick_axes(
+    uint16_t x_adc, 
+    uint16_t y_adc, 
+    Joystick_Axis_Config* x_conf, 
+    Joystick_Axis_Config* y_conf, 
+    int16_t* x_out, 
+    int16_t* y_out
 ) {
-    // uint16_t dz_outer;
-    // uint16_t dz_inner;
-    if (adc > conf->center) {
-        // use upper limit and center
-        // dz_outer = lerp(center, upper, DZ_JOY_OUTER);
-        // dz_inner = lerp(center, upper, DZ_JOY_INNER);
-        // return (int16_t)adc_to_trigger(adc, dz_inner, dz_outer);
-        return (int16_t)fast_axis_ilerp(conf->center, conf->upper, DZ_JOY_INNER, DZ_JOY_OUTER, adc);
-    } else if (adc < conf->center) {
-        // use center and lower limit
-        // dz_outer = lerp(center, lower, DZ_JOY_OUTER);
-        // dz_inner = lerp(center, lower, DZ_JOY_INNER);
-        // return (int16_t)adc_to_trigger(adc, dz_outer, dz_inner) - 32767L;
-        return (int16_t)fast_axis_ilerp(conf->lower, conf->center, 64 - DZ_JOY_OUTER, 64 - DZ_JOY_INNER, adc) - 32767L;
-    }
-    return 0;
+    // remap axes to [-1024, 1024]
+    int16_t px = remap_axis(x_adc, x_conf);
+    int16_t py = remap_axis(y_adc, y_conf);
+
+    // calculate distance and inverse lerp with deadzones to range [0, 32767]
+    uint16_t dist_p = isqrt((uint24_t)(px)*(px) + (uint24_t)(py)*(py));
+    uint16_t dist_q = dist_p > DZ_JOY_OUTER ? DZ_JOY_OUTER : (dist_p < DZ_JOY_INNER ? DZ_JOY_INNER : dist_p);
+    uint32_t scaled = (uint32_t)(dist_q - DZ_JOY_INNER) * 32767;
+    dist_q = (uint16_t)(scaled / (DZ_JOY_OUTER - DZ_JOY_INNER));
+
+    // re-apply dist_q to direction of px, py
+    *x_out = (int16_t)(((int32_t)px * dist_q) / dist_p);
+    *y_out = (int16_t)(((int32_t)py * dist_q) / dist_p);
 }
 
 /** 
@@ -202,10 +223,12 @@ uint16_t map_trigger_axis(
     uint16_t upper, 
     uint16_t lower
 ) {
-    // uint16_t dz_outer = lerp(lower, upper, DZ_TRIG_OUTER);
-    // uint16_t dz_inner = lerp(lower, upper, DZ_TRIG_INNER);
-    // return adc_to_trigger(adc, dz_inner, dz_outer);
-    return fast_axis_ilerp(lower, upper, DZ_TRIG_INNER, DZ_TRIG_OUTER, adc);
+    uint16_t range = upper - lower;
+    uint16_t dz_u = ((range * DZ_TRIG_OUTER) >> 6) + lower;
+    uint16_t dz_l = ((range * DZ_TRIG_INNER) >> 6) + lower;
+    uint16_t adc_clamped = adc > dz_u ? dz_u : (adc < dz_l ? dz_l : adc);
+    uint32_t scaled = (uint32_t)(adc_clamped - dz_l) * 32767;
+    return (uint16_t)(scaled / (dz_u - dz_l));
 }
 
 
