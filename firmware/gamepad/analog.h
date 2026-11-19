@@ -15,23 +15,23 @@
 #define CENTER_CHECK_RADIUS_SQ 625L  // 25^2
 
 
+typedef struct {
+    uint32_t center_full;
+    uint16_t center;
+    uint16_t upper;
+    uint16_t lower;
+} Joystick_Axis_Config;
+
+
 extern uint16_t adc_state[6];
 
 // joystick centers use exp. smoothing, so using bigger integers
 // to keep fractional parts
 
-extern uint32_t joy_l_center_x;  // left joystick x-axis center
-extern uint16_t joy_l_xu;  // left joystick x-axis upper limit
-extern uint16_t joy_l_xl;  // left joystick x-axis lower limit
-extern uint32_t joy_l_center_y;  // left joystick y-axis center
-extern uint16_t joy_l_yu;  // left joystick y-axis upper limit
-extern uint16_t joy_l_yl;  // left joystick y-axis lower limit
-extern uint32_t joy_r_center_x;  // right joystick x-axis center
-extern uint16_t joy_r_xu;  // right joystick x-axis upper limit
-extern uint16_t joy_r_xl;  // right joystick x-axis lower limit
-extern uint32_t joy_r_center_y;  // right joystick y-axis center
-extern uint16_t joy_r_yu;  // right joystick y-axis upper limit
-extern uint16_t joy_r_yl;  // right joystick y-axis lower limit
+extern Joystick_Axis_Config joy_lx;  // left joystick x-axis
+extern Joystick_Axis_Config joy_ly;  // left joystick y-axis
+extern Joystick_Axis_Config joy_rx;  // right joystick x-axis
+extern Joystick_Axis_Config joy_ry;  // right joystick y-axis
 
 extern uint16_t trig_l_u;  // left trigger upper limit
 extern uint16_t trig_l_l;  // left trigger lower limit
@@ -43,7 +43,7 @@ extern void init_joysticks(void);
 extern void read_adc(void);
 extern void update_analog_limits(void);
 extern void update_joystick_centers(void);
-extern int16_t map_joystick_axis(uint16_t adc, uint16_t upper, uint16_t lower, uint16_t center);
+extern int16_t map_joystick_axis(uint16_t adc, Joystick_Axis_Config* conf);
 extern uint16_t map_trigger_axis(uint16_t adc, uint16_t upper, uint16_t lower);
 
 

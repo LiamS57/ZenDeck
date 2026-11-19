@@ -6,18 +6,10 @@
 static uint32_t adc_sums[6];
 uint16_t adc_state[6];
 
-uint32_t joy_l_center_x;
-uint16_t joy_l_xu;
-uint16_t joy_l_xl;
-uint32_t joy_l_center_y;
-uint16_t joy_l_yu;
-uint16_t joy_l_yl;
-uint32_t joy_r_center_x;
-uint16_t joy_r_xu;
-uint16_t joy_r_xl;
-uint32_t joy_r_center_y;
-uint16_t joy_r_yu;
-uint16_t joy_r_yl;
+Joystick_Axis_Config joy_lx;
+Joystick_Axis_Config joy_ly;
+Joystick_Axis_Config joy_rx;
+Joystick_Axis_Config joy_ry;
 
 uint16_t trig_l_u;
 uint16_t trig_l_l;
@@ -82,28 +74,34 @@ void setup_adc_hw(void) {
 
 void init_joysticks(void) {
     // take initial readings for joystick centers and trigger zeroes
-    joy_l_center_x = 0;
-    joy_l_center_y = 0;
-    joy_r_center_x = 0;
-    joy_r_center_y = 0;
+    joy_lx.center_full = 0;
+    joy_ly.center_full = 0;
+    joy_rx.center_full = 0;
+    joy_ry.center_full = 0;
     for (uint8_t j = 0; j < 4; j++) {
         read_adc();
-        joy_l_center_x += adc_state[0];
-        joy_l_center_y += adc_state[1];
-        joy_r_center_x += adc_state[2];
-        joy_r_center_y += adc_state[3];
+        joy_lx.center_full += adc_state[0];
+        joy_ly.center_full += adc_state[1];
+        joy_rx.center_full += adc_state[2];
+        joy_ry.center_full += adc_state[3];
     }
     // shift left for more precision, then divide to keep average
-    joy_l_center_x = (joy_l_center_x << 8) / 4;
-    joy_l_center_y = (joy_l_center_y << 8) / 4;
-    joy_r_center_x = (joy_r_center_x << 8) / 4;
-    joy_r_center_y = (joy_r_center_y << 8) / 4;
+    joy_lx.center_full = (joy_lx.center_full << 8) / 4;
+    joy_ly.center_full = (joy_ly.center_full << 8) / 4;
+    joy_rx.center_full = (joy_rx.center_full << 8) / 4;
+    joy_ry.center_full = (joy_ry.center_full << 8) / 4;
+
+    // back shift for the 10-bit centers
+    joy_lx.center = joy_lx.center_full >> 8;
+    joy_ly.center = joy_ly.center_full >> 8;
+    joy_rx.center = joy_rx.center_full >> 8;
+    joy_ry.center = joy_ry.center_full >> 8;
 
     // setup limits
-    joy_l_xu = (joy_l_center_x >> 8) + 10; joy_l_xl = (joy_l_center_x >> 8) - 10;
-    joy_l_yu = (joy_l_center_y >> 8) + 10; joy_l_yl = (joy_l_center_y >> 8) - 10;
-    joy_r_xu = (joy_r_center_x >> 8) + 10; joy_r_xl = (joy_r_center_x >> 8) - 10;
-    joy_r_yu = (joy_r_center_y >> 8) + 10; joy_r_yl = (joy_r_center_y >> 8) - 10;
+    joy_lx.upper = joy_lx.center + 10; joy_lx.lower = joy_lx.center - 10;
+    joy_ly.upper = joy_ly.center + 10; joy_ly.lower = joy_ly.center - 10;
+    joy_rx.upper = joy_rx.center + 10; joy_rx.lower = joy_rx.center - 10;
+    joy_ry.upper = joy_ry.center + 10; joy_ry.lower = joy_ry.center - 10;
     trig_l_l = adc_state[4] - 1; trig_l_u = trig_l_l + 2;
     trig_r_l = adc_state[5] - 1; trig_r_u = trig_r_l + 2;
 }
@@ -128,17 +126,17 @@ void read_adc(void) {
 }
 
 void update_analog_limits(void) {
-    if (adc_state[0] > joy_l_xu) joy_l_xu = adc_state[0];
-    if (adc_state[0] < joy_l_xl) joy_l_xl = adc_state[0];
+    if (adc_state[0] > joy_lx.upper) joy_lx.upper = adc_state[0];
+    if (adc_state[0] < joy_lx.lower) joy_lx.lower = adc_state[0];
 
-    if (adc_state[1] > joy_l_yu) joy_l_yu = adc_state[1];
-    if (adc_state[1] < joy_l_yl) joy_l_yl = adc_state[1];
+    if (adc_state[1] > joy_ly.upper) joy_ly.upper = adc_state[1];
+    if (adc_state[1] < joy_ly.lower) joy_ly.lower = adc_state[1];
 
-    if (adc_state[2] > joy_r_xu) joy_r_xu = adc_state[2];
-    if (adc_state[2] < joy_r_xl) joy_r_xl = adc_state[2];
+    if (adc_state[2] > joy_rx.upper) joy_rx.upper = adc_state[2];
+    if (adc_state[2] < joy_rx.lower) joy_rx.lower = adc_state[2];
     
-    if (adc_state[3] > joy_r_yu) joy_r_yu = adc_state[3];
-    if (adc_state[3] < joy_r_yl) joy_r_yl = adc_state[3];
+    if (adc_state[3] > joy_ry.upper) joy_ry.upper = adc_state[3];
+    if (adc_state[3] < joy_ry.lower) joy_ry.lower = adc_state[3];
 
     if (adc_state[4] > trig_l_u) trig_l_u = adc_state[4];
     if (adc_state[4] < trig_l_l) trig_l_l = adc_state[4];
@@ -148,20 +146,24 @@ void update_analog_limits(void) {
 }
 
 void update_joystick_centers(void) {
-    int24_t joy_l_dx = (int24_t)adc_state[0] - (joy_l_center_x >> 8);
-    int24_t joy_l_dy = (int24_t)adc_state[1] - (joy_l_center_y >> 8);
+    int24_t joy_l_dx = (int24_t)adc_state[0] - joy_lx.center;
+    int24_t joy_l_dy = (int24_t)adc_state[1] - joy_ly.center;
     if ((joy_l_dx*joy_l_dx + joy_l_dy*joy_l_dy) <= CENTER_CHECK_RADIUS_SQ) {
         // left joystick center exp. smoothing
-        _smooth_step_joystick_center_axis(adc_state[0], &joy_l_center_x);
-        _smooth_step_joystick_center_axis(adc_state[1], &joy_l_center_y);
+        _smooth_step_joystick_center_axis(adc_state[0], &(joy_lx.center_full));
+        _smooth_step_joystick_center_axis(adc_state[1], &(joy_ly.center_full));
+        joy_lx.center = joy_lx.center_full >> 8;
+        joy_ly.center = joy_ly.center_full >> 8;
     }
 
-    int24_t joy_r_dx = (int24_t)adc_state[2] - (joy_r_center_x >> 8);
-    int24_t joy_r_dy = (int24_t)adc_state[3] - (joy_r_center_y >> 8);
+    int24_t joy_r_dx = (int24_t)adc_state[2] - joy_rx.center;
+    int24_t joy_r_dy = (int24_t)adc_state[3] - joy_ry.center;
     if ((joy_r_dx*joy_r_dx + joy_r_dy*joy_r_dy) <= CENTER_CHECK_RADIUS_SQ) {
         // right joystick center exp. smoothing
-        _smooth_step_joystick_center_axis(adc_state[2], &joy_r_center_x);
-        _smooth_step_joystick_center_axis(adc_state[3], &joy_r_center_y);
+        _smooth_step_joystick_center_axis(adc_state[2], &(joy_rx.center_full));
+        _smooth_step_joystick_center_axis(adc_state[3], &(joy_ry.center_full));
+        joy_rx.center = joy_rx.center_full >> 8;
+        joy_ry.center = joy_ry.center_full >> 8;
     }
 }
 
@@ -170,25 +172,23 @@ void update_joystick_centers(void) {
  * while applying deadzones. Output: -32767 to 32767
  */
 int16_t map_joystick_axis(
-    uint16_t adc, 
-    uint16_t upper, 
-    uint16_t lower, 
-    uint16_t center
+    uint16_t adc,
+    Joystick_Axis_Config* conf
 ) {
     // uint16_t dz_outer;
     // uint16_t dz_inner;
-    if (adc > center) {
+    if (adc > conf->center) {
         // use upper limit and center
         // dz_outer = lerp(center, upper, DZ_JOY_OUTER);
         // dz_inner = lerp(center, upper, DZ_JOY_INNER);
         // return (int16_t)adc_to_trigger(adc, dz_inner, dz_outer);
-        return (int16_t)fast_axis_ilerp(center, upper, DZ_JOY_INNER, DZ_JOY_OUTER, adc);
-    } else if (adc < center) {
+        return (int16_t)fast_axis_ilerp(conf->center, conf->upper, DZ_JOY_INNER, DZ_JOY_OUTER, adc);
+    } else if (adc < conf->center) {
         // use center and lower limit
         // dz_outer = lerp(center, lower, DZ_JOY_OUTER);
         // dz_inner = lerp(center, lower, DZ_JOY_INNER);
         // return (int16_t)adc_to_trigger(adc, dz_outer, dz_inner) - 32767L;
-        return (int16_t)fast_axis_ilerp(lower, center, 64 - DZ_JOY_OUTER, 64 - DZ_JOY_INNER, adc) - 32767L;
+        return (int16_t)fast_axis_ilerp(conf->lower, conf->center, 64 - DZ_JOY_OUTER, 64 - DZ_JOY_INNER, adc) - 32767L;
     }
     return 0;
 }
