@@ -10,3 +10,9 @@ firmware/*/*.hex
 firmware/*/*.lss
 firmware/*/*.map
 firmware/*/*.sym
+
+hardware/pcb/*/fp-info-cache
+hardware/pcb/*/Gerbers
+hardware/pcb/*/*-backups
+hardware/pcb/*/*.zip
+hardware/pcb/*/*.lck
